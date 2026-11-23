@@ -7,6 +7,13 @@ import smtplib
 from email.message import EmailMessage
 import requests
 import time 
+import logging
+
+logging.basicConfig(
+    filename="email_automation.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # Load credentials
 sender_email = os.getenv("EMAIL_ADDRESS")
@@ -25,7 +32,7 @@ for row in worksheet.iter_rows(min_row=2):
     today = datetime.date.today()
     #print("Checking:", repr(name), repr(email), repr(date), repr(status))
     #print(date.date(),today.weekday())
-    if date.date() == today and status == "pending" and (today.weekday() == 4 or today.weekday() == 5 or today.weekday() == 6):
+    if date.date() == today and status == "pending" and (today.weekday() == 0 or today.weekday() == 5 or today.weekday() == 6):
         print("MATCH FOUND -", name,"-", status)
         
         #ollama api call to generate email content
@@ -58,6 +65,7 @@ for row in worksheet.iter_rows(min_row=2):
                 break
             except Exception as e:
                 print(e)
+                logging.error(f"Ollama request failed: {e}")
                 if i < 1:
                     print("Retrying...")
                     time.sleep(5)
@@ -84,6 +92,7 @@ for row in worksheet.iter_rows(min_row=2):
 
             #sending the email
             server.send_message(msg)
+            logging.info(f"Email sent successfully to {email}")
             row[3].value = "sent"
             status = "sent"
             print("Email sent successfully!")
@@ -93,6 +102,7 @@ for row in worksheet.iter_rows(min_row=2):
             status = "failed"
             print(e)
             print("Email sending failed")
+            logging.error(f"Failed to send email to {email}: {e}")
         
         finally:
             if server:
