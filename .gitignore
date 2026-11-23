@@ -2,3 +2,5 @@
 venv/
 .venv/
 __pycache__/
+email_list.xlsx
+email_automation.log
